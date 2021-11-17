@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.jfrog.cardinalcommerce.gradle:cardinalmobilesdk:2.2.1-2@aar">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/50d6a103cf4f80f66351bc7a9cfd97f1/jetified-cardinalmobilesdk-2.2.1-2/AndroidManifest.xml" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/50d6a103cf4f80f66351bc7a9cfd97f1/jetified-cardinalmobilesdk-2.2.1-2/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/50d6a103cf4f80f66351bc7a9cfd97f1/jetified-cardinalmobilesdk-2.2.1-2/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

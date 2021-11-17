@@ -1,0 +1,36 @@
+2v)o_\7,>Djec<N
+
+
+
+
+    // function product_referal_url($uid,$pid){
+    //     $dblink=$this->db->where('user_id',$uid)->where('product_id',$pid)->get(' royalboard_links')->result();
+    //     if($dblink[0]){
+    //         return $dblink[0]->link;
+    //     }
+    //     else{
+    //         $star="https://suqmshtrk.com/dashboardpanel/testing/controller/uploads/";
+    //         $product_details=$this->db->where('id',$pid)->get('rt_products')->result();
+    //         $desc="منتج السوق المشترك الكبير";
+            
+    //         $title=$product_details[0]->name;
+            
+            
+    //         $img=$star.$this->db->where('img_parent_id',$pid)->get('core_images')->result()[0]->img_path;
+    //         $link=rb_deep_link($desc,$title,$img,$pid,$uid,"product");
+    //       if( $this->db->insert('royalboard_links'
+    //         ,array(
+    //             'user_id',$uid,
+    //             'product_id',$pid,
+    //             'link',$link
+    //             )
+    //         )){
+                
+                
+    //                 return $link;
+                    
+    //         }
+        
+            
+    //     }
+    // }

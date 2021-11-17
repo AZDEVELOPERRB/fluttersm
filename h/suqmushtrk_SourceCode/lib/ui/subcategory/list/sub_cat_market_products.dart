@@ -1,0 +1,405 @@
+import 'package:flutter/material.dart';
+import 'package:RoyalBoard_Common_sooq/api/common/RoyalBoard_status.dart';
+import 'package:RoyalBoard_Common_sooq/config/RoyalBoard_colors.dart';
+import 'package:RoyalBoard_Common_sooq/config/RoyalBoard_config.dart';
+import 'package:RoyalBoard_Common_sooq/constant/RoyalBoard_dimens.dart';
+import 'package:RoyalBoard_Common_sooq/constant/route_paths.dart';
+import 'package:RoyalBoard_Common_sooq/provider/subcategory/sub_category_provider.dart';
+import 'package:RoyalBoard_Common_sooq/repository/sub_category_repository.dart';
+import 'package:RoyalBoard_Common_sooq/ui/common/ps_admob_banner_widget.dart';
+import 'package:RoyalBoard_Common_sooq/ui/common/ps_ui_widget.dart';
+import 'package:RoyalBoard_Common_sooq/ui/subcategory/item/sub_category_grid_item.dart';
+import 'package:RoyalBoard_Common_sooq/ui/subcategory/item/afrad_sub_cat_item.dart';
+import 'package:RoyalBoard_Common_sooq/utils/utils.dart';
+import 'package:RoyalBoard_Common_sooq/viewobject/category.dart';
+import 'package:RoyalBoard_Common_sooq/viewobject/common/ps_value_holder.dart';
+import 'package:RoyalBoard_Common_sooq/viewobject/holder/intent_holder/product_list_intent_holder.dart';
+import 'package:RoyalBoard_Common_sooq/ui/dashboard/home/product_list_view.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter/scheduler.dart' show timeDilation;
+import 'package:shimmer/shimmer.dart';
+
+class SubCatMP extends StatefulWidget {
+  const SubCatMP({
+    Key key,
+    this.shopid,
+    this.subcat,
+    this.isOffer,
+    this.flag,this.isfeatered,
+    this.gridvalue,
+
+    this.category});
+  final shopid;
+  final subcat;
+  final isOffer;
+  final bool flag;
+  final int gridvalue;
+  final bool isfeatered;
+  final Category category;
+  @override
+  _ModelGridViewState createState() {
+    return _ModelGridViewState();
+  }
+}
+
+class _ModelGridViewState extends State<SubCatMP>
+    with SingleTickerProviderStateMixin {
+  final ScrollController _scrollController = ScrollController();
+
+  SubCategoryProvider _subCategoryProvider;
+  PsValueHolder valueHolder;
+
+  AnimationController animationController;
+  Animation<double> animation;
+
+  @override
+  void dispose() {
+    animationController.dispose();
+    animation = null;
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+        final String categId = widget.category.id;
+        Utils.psPrint('CategoryId number is $categId');
+
+        _subCategoryProvider.nextSubCategoryList(
+          widget.category.id,
+        );
+      }
+    });
+    animationController =
+        AnimationController(duration: RoyalBoardConfig.animation_duration, vsync: this);
+    super.initState();
+  }
+
+  SubCategoryRepository repo1;
+  bool isConnectedToInternet = false;
+  bool isSuccessfullyLoaded = true;
+
+
+  void checkConnection() {
+    Utils.checkInternetConnectivity().then((bool onValue) {
+      isConnectedToInternet = onValue;
+      if (isConnectedToInternet && RoyalBoardConfig.showAdMob) {
+        if (mounted) {
+          setState(() {});
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var size=MediaQuery.of(context).size;
+    if (!isConnectedToInternet && RoyalBoardConfig.showAdMob) {
+      print('loading ads....');
+      checkConnection();
+    }
+    timeDilation = 1.0;
+    repo1 = Provider.of<SubCategoryRepository>(context);
+    valueHolder = Provider.of<PsValueHolder>(context);
+    ScrollController _scroll;
+    // final dynamic data = EasyLocalizationProvider.of(context).data;
+
+    // return EasyLocalizationProvider(
+    //     data: data,
+    //     child:
+    return Scaffold(
+        // appBar: AppBar(
+        //   //backgroundColor: RoyalBoardColors.mainColor,
+        //   brightness: Utils.getBrightnessForAppBar(context),
+        //   title: Text(
+        //     widget.category.name,
+        //     textAlign: TextAlign.center,
+        //     style: Theme.of(context).textTheme.headline6.copyWith(
+        //       fontWeight: FontWeight.bold,
+        //     ),
+        //   ),
+        //   iconTheme: Theme.of(context).iconTheme.copyWith(),
+        // ),
+        body: Container(
+          child: ChangeNotifierProvider<SubCategoryProvider>(
+              lazy: false,
+              create: (BuildContext context) {
+                _subCategoryProvider =
+                    SubCategoryProvider(repo: repo1, psValueHolder: valueHolder);
+                _subCategoryProvider.loadAllSubCategoryList(
+                  widget.category.id,shopid: widget.shopid
+                );
+                return _subCategoryProvider;
+              },
+              child: Consumer<SubCategoryProvider>(builder: (BuildContext context,
+                  SubCategoryProvider provider, Widget child) {
+                return Column(
+                  children: <Widget>[
+                    const PsAdMobBannerWidget(),
+                    Expanded(
+                      child: Stack(children: <Widget>[
+                        Container(
+
+                            child: RefreshIndicator(
+                              onRefresh: () {
+                                return _subCategoryProvider.resetSubCategoryList(
+                                  widget.category.id,
+                                );
+                              },
+                              child: CustomScrollView(
+                                  controller: _scrollController,
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  scrollDirection: Axis.vertical,
+                                  shrinkWrap: true,
+                                  slivers: <Widget>[
+                                    SliverGrid(
+                                      gridDelegate:
+                                    widget.gridvalue==null?
+                                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                                        maxCrossAxisExtent: 240,
+                                        childAspectRatio: 1.3):
+                                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                                        maxCrossAxisExtent: 80,
+                                        childAspectRatio: 0.1),
+                                      delegate: SliverChildBuilderDelegate(
+                                            (BuildContext context, int index) {
+                                          if (provider.subCategoryList.status ==
+                                              PsStatus.BLOCK_LOADING) {
+                                            return Shimmer.fromColors(
+                                                baseColor: RoyalBoardColors.grey,
+                                                highlightColor: RoyalBoardColors.white,
+                                                child:
+                                                Column(children: const <Widget>[
+                                                  FrameUIForLoading(),
+                                                  FrameUIForLoading(),
+                                                  FrameUIForLoading(),
+                                                  FrameUIForLoading(),
+                                                  FrameUIForLoading(),
+                                                  FrameUIForLoading(),
+                                                ]));
+                                          } else {
+                                            final int count =
+                                                provider.subCategoryList.data.length;
+                                            return  widget.gridvalue==null?SubCategoryGridItem(
+
+                                              subCategory: provider
+                                                  .subCategoryList.data[index],
+                                              onTap: () {
+
+                                                provider.subCategoryByCatIdParamenterHolder
+                                                    .catId =
+                                                    provider.subCategoryList
+                                                        .data[index].catId;
+                                                provider.subCategoryByCatIdParamenterHolder
+                                                    .subCatId =
+                                                    provider.subCategoryList
+                                                        .data[index].id;
+                                                Navigator.push(context, MaterialPageRoute(
+                                                  builder: (ctx)=>productviewr(
+                                                    shopid: widget.shopid,
+                                                    key:widget.key,
+                                                    isOffer: widget.isOffer,
+                                                    subcat:   provider.subCategoryList
+                                                        .data[index].id,
+                                                    category:widget.category,
+                                                    flag: widget.flag,
+                                                    isfeatered: widget.isfeatered,
+                                                  )
+                                                ));
+                                                // return
+                                                //   ProductListView(
+                                                //     shopId: widget.shopid,
+                                                //     key:widget.key,
+                                                //     subcat:   provider.subCategoryList
+                                                //         .data[index].id,
+                                                //     catId:widget.category.id,
+                                                //     flag: widget.flag,
+                                                //     isFeaturedItem: widget.isfeatered,
+                                                //   );
+
+                                              },
+                                              animationController:
+                                              animationController,
+                                              animation:
+                                              Tween<double>(begin: 0.0, end: 1.0)
+                                                  .animate(CurvedAnimation(
+                                                parent: animationController,
+                                                curve: Interval(
+                                                    (1 / count) * index, 1.0,
+                                                    curve: Curves.fastOutSlowIn),
+                                              )),
+                                            ):Afrad_SubCategoryGridItem(
+                                              subCategory: provider
+                                                  .subCategoryList.data[index],
+                                              onTap: () {
+                                                provider.subCategoryByCatIdParamenterHolder
+                                                    .catId =
+                                                    provider.subCategoryList
+                                                        .data[index].catId;
+                                                provider.subCategoryByCatIdParamenterHolder
+                                                    .subCatId =
+                                                    provider.subCategoryList
+                                                        .data[index].id;
+                                                Navigator.push(context, MaterialPageRoute(
+                                                    builder: (ctx)=>productviewr(
+                                                      shopid: widget.shopid,
+                                                      key:widget.key,
+                                                      isOffer: widget.isOffer,
+                                                      subcat:   provider.subCategoryList
+                                                          .data[index].id,
+                                                      category:widget.category,
+                                                      flag: widget.flag,
+                                                      isfeatered: widget.isfeatered,
+                                                    )
+                                                ));
+                                                // return
+                                                //   ProductListView(
+                                                //     shopId: widget.shopid,
+                                                //     key:widget.key,
+                                                //     subcat:   provider.subCategoryList
+                                                //         .data[index].id,
+                                                //     catId:widget.category.id,
+                                                //     flag: widget.flag,
+                                                //     isFeaturedItem: widget.isfeatered,
+                                                //   );
+
+                                              },
+                                              animationController:
+                                              animationController,
+                                              animation:
+                                              Tween<double>(begin: 0.0, end: 1.0)
+                                                  .animate(CurvedAnimation(
+                                                parent: animationController,
+                                                curve: Interval(
+                                                    (1 / count) * index, 1.0,
+                                                    curve: Curves.fastOutSlowIn),
+                                              )),
+                                            );
+                                          }
+                                        },
+                                        childCount:
+                                        provider.subCategoryList.data.length,
+                                      ),
+                                    ),
+                                    // SliverPadding(
+                                    //
+                                    //     padding: EdgeInsets.all(0),
+                                    //     sliver :SliverList(
+                                    //
+                                    //         delegate: SliverChildListDelegate(
+                                    //             [
+                                    //               Container(
+                                    //                 height: size.height*0.65,
+                                    //                 child: ProductListView(
+                                    //                   shopId: widget.shopid,
+                                    //                   key:widget.key,
+                                    //                   subcat:  '',
+                                    //                   catId:widget.category.id,
+                                    //                   flag: widget.flag,
+                                    //                   isFeaturedItem: widget.isfeatered,
+                                    //                 ),
+                                    //               ),
+                                    //             ]
+                                    //         )))
+
+                                  ]),
+                            )),
+                        PSProgressIndicator(
+                          provider.subCategoryList.status,
+                          message: provider.subCategoryList.message,
+                        )
+                      ]),
+                    )
+                  ],
+                );
+              })),
+        )
+      // )
+    );
+  }
+}
+class productviewr extends StatefulWidget {
+  const productviewr({
+    Key key,
+    this.shopid,
+    this.subcat,
+    this.isOffer,
+    this.flag,this.isfeatered,
+
+    this.category});
+  final shopid;
+  final subcat;
+  final isOffer;
+  final bool flag;
+  final bool isfeatered;
+  final Category category;
+  @override
+  _productviewrState createState() => _productviewrState();
+}
+
+class _productviewrState extends State<productviewr> {
+  @override
+  Widget build(BuildContext context) {
+    var size=MediaQuery.of(context).size;
+    return       Scaffold(
+      appBar: AppBar(
+
+        leading: new IconButton(
+      icon: new Icon(Icons.arrow_back,color: Colors.red,),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+        ),
+
+      ),
+      body: Container(
+        width: size.width,
+        height: size.height,
+        child: ProductListView(
+          shopId: widget.shopid,
+          key:widget.key,
+          isOffer: widget.isOffer,
+
+          subcat:  widget.subcat,
+          catId:widget.category.id,
+          flag: widget.flag,
+          isFeaturedItem: widget.isfeatered,
+        ),
+      ),
+    );;
+  }
+}
+
+class FrameUIForLoading extends StatelessWidget {
+  const FrameUIForLoading({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Container(
+            height: 70,
+            width: 70,
+            margin: const EdgeInsets.all(PsDimens.space16),
+            decoration: BoxDecoration(color: RoyalBoardColors.grey)),
+        Expanded(
+            child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+              Container(
+                  height: 15,
+                  margin: const EdgeInsets.all(PsDimens.space8),
+                  decoration: BoxDecoration(color: Colors.grey[300])),
+              Container(
+                  height: 15,
+                  margin: const EdgeInsets.all(PsDimens.space8),
+                  decoration: const BoxDecoration(color: Colors.grey)),
+            ]))
+      ],
+    );
+  }
+}

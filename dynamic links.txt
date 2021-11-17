@@ -1,0 +1,9 @@
+       final str = 'https://roy-host.com/apps-host/fgrocer/itemId=prdb4865f5649b2272cbaf964c89c949dc1userid=usr774edb55f0ebc79aeeef19d4db377a40';
+                   String user_id = 'https://roy-host.com/apps-host/fgrocer/itemId=prdb4865f5649b2272cbaf964c89c949dc1userid=usr774edb55f0ebc79aeeef19d4db377a40';
+                    final start = 'itemId=';
+                    final end = 'userid=';
+
+                    final startIndex = str.indexOf(start);
+                    final endIndex = str.indexOf(end);
+                    final result = str.substring(startIndex + start.length, endIndex).trim();
+                    var uid=user_id.split('userid=');
